@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로젝트 관리 시스템</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        
+        /* 탭 네비게이션 */
+        .tab-navigation {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 20px 30px;
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            top: 2px;
+        }
+        .tab-btn:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        
+        /* 공통 액션 버튼 */
+        .main-actions {
+            padding: 20px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .add-task-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .add-task-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .add-task-btn.btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .add-task-btn.btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 대시보드 스타일 */
+        .dashboard {
+            padding: 40px;
+            background: white;
+            min-height: 600px;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .dashboard-date {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .dashboard-day {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .task-list-item {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+            gap: 15px;
+        }
+        .task-list-item:hover {
+            background: #e8eaf6;
+            transform: translateX(5px);
+        }
+        .task-list-item.color-1 { border-left-color: #667eea; }
+        .task-list-item.color-2 { border-left-color: #f5576c; }
+        .task-list-item.color-3 { border-left-color: #00f2fe; }
+        .task-list-item.color-4 { border-left-color: #38f9d7; }
+        .task-list-item.color-5 { border-left-color: #fee140; }
+        
+        .task-list-content {
+            flex: 1;
+        }
+        
+        .task-list-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .task-list-main {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .task-list-sub {
+            font-size: 0.95em;
+            color: #666;
+            padding-left: 20px;
+        }
+        
+        .task-list-sub.completed-subtask {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 8px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        
+        .task-list-sub.completed-subtask > span:first-child {
+            flex: 1;
+        }
+        
+        .task-list-dday {
+            font-size: 0.95em;
+            font-weight: bold;
+            padding: 6px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            margin-left: 15px;
+        }
+        .task-list-dday.today {
+            background: #ff4444;
+            color: white;
+        }
+        .task-list-dday.urgent {
+            background: #FF9800;
+            color: white;
+        }
+        .task-list-dday.normal {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .task-list-dday.overdue {
+            background: #f44336;
+            color: white;
+        }
+        .task-list-dday.completed {
+            background: #4CAF50;
+            color: white;
+            font-size: 1.1em;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+        .empty-state-text {
+            font-size: 1.1em;
+        }
+
+        /* 간트차트 스타일 */
+        .chart-container { 
+            padding: 40px; 
+            overflow-x: auto;
+        }
+        .gantt-chart { 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 1000px; 
+        }
+        .chart-header { 
+            display: flex; 
+            border-bottom: 2px solid #667eea; 
+            padding-bottom: 10px; 
+            margin-bottom: 10px; 
+        }
+        .header-left { 
+            flex-shrink: 0; 
+            width: 250px; 
+            padding-right: 20px; 
+        }
+        .header-right { 
+            flex-grow: 1; 
+            display: flex; 
+        }
+        .timeline-date {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.85em;
+            padding: 0 5px;
+            min-width: 60px;
+        }
+        .chart-body { 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+            overflow: visible;
+        }
+        .chart-row { 
+            display: flex; 
+            height: 60px; 
+            border-bottom: 1px solid #e0e0e0;
+            position: relative;
+            overflow: visible;
+        }
+        .task-name {
+            flex-shrink: 0;
+            width: 250px;
+            padding: 10px 20px 10px 10px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+            transition: background 0.3s;
+            justify-content: space-between;
+            position: relative;
+        }
+        .task-name:hover { background: #f5f5f5; }
+        .task-name.has-subtasks { cursor: pointer; user-select: none; }
+        .task-name.has-subtasks::after {
+            content: '▼';
+            margin-left: 8px;
+            font-size: 0.8em;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
+        .task-name.has-subtasks.collapsed::after { 
+            transform: rotate(-90deg); 
+        }
+        
+        .task-name.subtask {
+            padding-left: 40px;
+            font-size: 0.9em;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        .task-name.subtask::before { 
+            content: '└ '; 
+            color: #999; 
+            margin-right: 5px; 
+        }
+        
+        .chart-row.subtask-row {
+            max-height: 60px;
+            transition: all 0.3s ease;
+        }
+        .chart-row.subtask-row.collapsed {
+            max-height: 0;
+            opacity: 0;
+            border-bottom: none;
+            overflow: hidden;
+        }
+        .chart-row.hidden {
+            display: none;
+        }
+        
+        .task-timeline { 
+            flex-grow: 1; 
+            position: relative; 
+            display: flex; 
+        }
+        .timeline-column { 
+            flex: 1; 
+            border-right: 1px solid #e0e0e0; 
+            min-width: 60px; 
+        }
+        .timeline-column:last-child { border-right: none; }
+        
+        .current-date-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #ff4444;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            pointer-events: none;
+        }
+        .current-date-line::before {
+            content: '오늘';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: auto;
+        }
+        .current-date-line.no-label::before { display: none; }
+        
+        .task-bar {
+            position: absolute;
+            height: 40px;
+            top: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .task-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        .task-bar.color-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .task-bar.color-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .task-bar.color-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .task-bar.color-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .task-bar.color-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        
+        .status-dropdown {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+        .status-dropdown:hover {
+            border-color: #667eea;
+        }
+        .status-dropdown.진행중 { background: #E3F2FD; color: #1976D2; border-color: #1976D2; }
+        .status-dropdown.완료 { background: #E8F5E9; color: #388E3C; border-color: #388E3C; }
+        .status-dropdown.보류 { background: #FFF3E0; color: #F57C00; border-color: #F57C00; }
+        .status-dropdown.종료 { background: #ECEFF1; color: #607D8B; border-color: #607D8B; }
+        
+        .status-dropdown-dashboard {
+            padding: 6px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s;
+            margin-left: 10px;
+            outline: none;
+        }
+        .status-dropdown-dashboard:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+        .status-dropdown-dashboard.진행중 { background: #E3F2FD; color: #1976D2; border-color: #1976D2; }
+        .status-dropdown-dashboard.완료 { background: #E8F5E9; color: #388E3C; border-color: #388E3C; }
+        .status-dropdown-dashboard.보류 { background: #FFF3E0; color: #F57C00; border-color: #F57C00; }
+        .status-dropdown-dashboard.종료 { background: #ECEFF1; color: #607D8B; border-color: #607D8B; }
+        
+        .task-bar.status-진행중 { opacity: 1; }
+        .task-bar.status-완료 { 
+            background: linear-gradient(135deg, #d0d0d0 0%, #a8a8a8 100%) !important;
+            opacity: 0.8; 
+            text-decoration: line-through; 
+        }
+        .task-bar.status-보류 { opacity: 0.5; filter: grayscale(30%); }
+        .task-bar.status-종료 { 
+            background: linear-gradient(135deg, #b0b0b0 0%, #909090 100%) !important;
+            opacity: 0.6; 
+            filter: grayscale(100%); 
+        }
+        
+        /* 드롭다운 메뉴 */
+        .task-buttons {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            position: relative;
+        }
+        .task-name:hover .task-buttons {
+            opacity: 1;
+        }
+        
+        .menu-btn {
+            padding: 4px 8px;
+            background: #f5f5f5;
+            color: #666;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: all 0.3s;
+            line-height: 1;
+        }
+        .menu-btn:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px;
+            z-index: 2000;
+            display: none;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .dropdown-menu.show {
+            display: block;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            background: white;
+            width: 100%;
+            text-align: left;
+            color: #333;
+        }
+        .dropdown-item:hover {
+            background: #f5f5f5;
+        }
+        .dropdown-item.add {
+            color: #4facfe;
+        }
+        .dropdown-item.add:hover {
+            background: #e3f2fd;
+        }
+        .dropdown-item.edit {
+            color: #FF9800;
+        }
+        .dropdown-item.edit:hover {
+            background: #fff3e0;
+        }
+        .dropdown-item.delete {
+            color: #f44336;
+        }
+        .dropdown-item.delete:hover {
+            background: #ffebee;
+        }
+        
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 툴팁 */
+        .tooltip {
+            position: fixed;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .tooltip.show { display: block; }
+        .tooltip-title { font-weight: bold; margin-bottom: 8px; font-size: 1.1em; }
+        .tooltip-info { margin: 4px 0; }
+        
+        /* 범례 */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 10px; }
+        .legend-color { width: 30px; height: 20px; border-radius: 5px; }
+        .legend-color.color-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .legend-color.color-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .legend-color.color-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .legend-color.color-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .legend-color.color-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+        .modal-header h2 {
+            font-size: 1.5em;
+            color: #667eea;
+            margin: 0;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .close-modal:hover {
+            background: #f5f5f5;
+            color: #667eea;
+            transform: rotate(90deg);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .color-selector {
+            display: flex;
+            gap: 10px;
+        }
+        .color-option {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.15);
+        }
+        .color-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .color-option.color-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .color-option.color-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .color-option.color-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .color-option.color-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .color-option.color-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 프로젝트 관리 시스템</h1>
+            <p>일정과 진행상황을 한눈에 확인하세요</p>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="dashboard">📊 대시보드</button>
+            <button class="tab-btn" data-tab="gantt">📈 간트차트</button>
+            <button class="tab-btn" data-tab="list">📋 전체목록</button>
+        </div>
+
+        <!-- 대시보드 탭 -->
+        <div class="tab-content active" id="dashboard-tab">
+            <div class="main-actions">
+                <button class="add-task-btn" id="addMainTaskBtn">+ 새 할일 추가</button>
+                <div style="flex: 1;"></div>
+                <button class="add-task-btn btn-secondary" id="exportBtn">💾 내보내기</button>
+                <button class="add-task-btn btn-secondary" id="importBtn">📂 가져오기</button>
+                <button class="add-task-btn btn-secondary" id="resetBtn">🔄 초기화</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+            <div class="dashboard" id="dashboard"></div>
+        </div>
+
+        <!-- 간트차트 탭 -->
+        <div class="tab-content" id="gantt-tab">
+            <div class="main-actions">
+                <button class="add-task-btn" id="addMainTaskBtn2">+ 새 할일 추가</button>
+                <button class="add-task-btn btn-secondary" id="toggleCompletedBtn">✓ 완료된 할일 숨기기</button>
+            </div>
+            <div class="chart-container">
+                <div class="gantt-chart" id="ganttChart"></div>
+            </div>
+        </div>
+
+        <!-- 전체목록 탭 -->
+        <div class="tab-content" id="list-tab">
+            <div class="main-actions">
+                <span style="font-weight: 600; color: #666;">전체 할일 목록</span>
+            </div>
+            <div style="padding: 40px;" id="allTasksList"></div>
+        </div>
+    </div>
+
+    <!-- 툴팁 -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title" id="tooltipTitle"></div>
+        <div class="tooltip-info" id="tooltipDates"></div>
+        <div class="tooltip-info" id="tooltipDuration"></div>
+    </div>
+
+    <!-- 할일 추가/편집 모달 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">할일 추가</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="taskNameInput">할일 이름 *</label>
+                    <input type="text" id="taskNameInput" placeholder="예: 프로젝트 기획" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskStartDate">시작일 *</label>
+                    <input type="date" id="taskStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskEndDate">종료일 *</label>
+                    <input type="date" id="taskEndDate" required>
+                </div>
+                <div class="form-group">
+                    <label>색상 선택</label>
+                    <div class="color-selector" id="colorSelector">
+                        <button type="button" class="color-option color-1 selected" data-color="color-1"></button>
+                        <button type="button" class="color-option color-2" data-color="color-2"></button>
+                        <button type="button" class="color-option color-3" data-color="color-3"></button>
+                        <button type="button" class="color-option color-4" data-color="color-4"></button>
+                        <button type="button" class="color-option color-5" data-color="color-5"></button>
+                    </div>
+                </div>
+                <div class="form-group" id="statusGroup" style="display: none;">
+                    <label for="taskStatus">상태 *</label>
+                    <select id="taskStatus">
+                        <option value="진행중">진행중</option>
+                        <option value="완료">완료</option>
+                        <option value="보류">보류</option>
+                        <option value="종료">종료</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+                    <button type="submit" class="btn btn-primary">추가하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 초기 데이터
+        const defaultTasks = [
+            { 
+                name: '프로젝트 기획', 
+                startDate: '2025-10-25', 
+                endDate: '2025-11-03', 
+                color: 'color-1',
+                subtasks: [
+                    { name: '프로젝트 심사', startDate: '2025-10-25', endDate: '2025-10-30', color: 'color-1', status: '진행중' },
+                    { name: '프로젝트 투자', startDate: '2025-10-29', endDate: '2025-11-03', color: 'color-1', status: '진행중' }
+                ]
+            },
+            { name: '디자인 작업', startDate: '2025-10-31', endDate: '2025-11-12', color: 'color-2', subtasks: [] },
+            { name: '프론트엔드 개발', startDate: '2025-11-05', endDate: '2025-11-20', color: 'color-3', subtasks: [] },
+            { name: '백엔드 개발', startDate: '2025-11-08', endDate: '2025-11-23', color: 'color-4', subtasks: [] },
+            { name: '테스트 및 배포', startDate: '2025-11-15', endDate: '2025-11-25', color: 'color-5', subtasks: [] }
+        ];
+
+        // localStorage 관리
+        function loadTasks() {
+            const saved = localStorage.getItem('ganttTasks');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    return JSON.parse(JSON.stringify(defaultTasks));
+                }
+            }
+            return JSON.parse(JSON.stringify(defaultTasks));
+        }
+
+        function saveTasks() {
+            localStorage.setItem('ganttTasks', JSON.stringify(tasks));
+        }
+
+        let tasks = loadTasks();
+
+        // DOM 요소
+        const ganttChart = document.getElementById('ganttChart');
+        const tooltip = document.getElementById('tooltip');
+        const taskModal = document.getElementById('taskModal');
+        const taskForm = document.getElementById('taskForm');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const colorSelector = document.getElementById('colorSelector');
+        const statusGroup = document.getElementById('statusGroup');
+        const toggleCompletedBtn = document.getElementById('toggleCompletedBtn');
+        
+        let selectedColor = 'color-1';
+        let isAddingSubtask = false;
+        let parentTaskIndex = null;
+        let hideCompleted = false;
+        let isEditing = false;
+        let editingTaskIndex = null;
+        let editingSubtaskIndex = null;
+
+        // D-day 계산
+        function calculateDday(endDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(0, 0, 0, 0);
+            const diffTime = end - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return { text: `D+${Math.abs(diffDays)}`, class: 'overdue' };
+            if (diffDays === 0) return { text: '오늘 마감!', class: 'today' };
+            if (diffDays <= 3) return { text: `D-${diffDays}`, class: 'urgent' };
+            return { text: `D-${diffDays}`, class: 'normal' };
+        }
+
+        // 날짜 포맷
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+        }
+
+        // 진행률 계산
+        function calculateProgress(task) {
+            if (!task.subtasks || task.subtasks.length === 0) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const start = new Date(task.startDate);
+                const end = new Date(task.endDate);
+                
+                if (today < start) return 0;
+                if (today > end) return 100;
+                
+                const total = end - start;
+                const elapsed = today - start;
+                return Math.round((elapsed / total) * 100);
+            }
+            
+            const completed = task.subtasks.filter(st => st.status === '완료').length;
+            return Math.round((completed / task.subtasks.length) * 100);
+        }
+
+        // 오늘 진행 중인 할일 체크
+        function isActiveToday(task) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(task.startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(task.endDate);
+            end.setHours(23, 59, 59, 999);
+            
+            return today >= start && today <= end;
+        }
+
+        // 대시보드 렌더링
+        function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            
+            const today = new Date();
+            const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+            const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+            const dayStr = days[today.getDay()];
+            
+            const todayTasks = [];
+            tasks.forEach((task, taskIndex) => {
+                // 오늘 진행 중이거나 종료일이 지났지만 완료되지 않은 할일
+                const isOverdueOrActive = isActiveToday(task) || (new Date(task.endDate) < new Date().setHours(0, 0, 0, 0));
+                
+                if (isOverdueOrActive) {
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        task.subtasks.forEach((subtask, subtaskIndex) => {
+                            // 서브태스크도 오늘 진행 중이거나 마감이 지났는지 확인
+                            const subtaskOverdueOrActive = isActiveToday(subtask) || (new Date(subtask.endDate) < new Date().setHours(0, 0, 0, 0));
+                            
+                            if (subtask.status !== '완료' && subtask.status !== '종료' && subtaskOverdueOrActive) {
+                                todayTasks.push({
+                                    mainTask: task.name,
+                                    subTask: subtask.name,
+                                    endDate: subtask.endDate,
+                                    color: task.color,
+                                    status: subtask.status || '진행중',
+                                    taskIndex: taskIndex,
+                                    subtaskIndex: subtaskIndex
+                                });
+                            }
+                        });
+                    } else {
+                        const progress = calculateProgress(task);
+                        if (progress < 100) {
+                            todayTasks.push({
+                                mainTask: task.name,
+                                subTask: null,
+                                endDate: task.endDate,
+                                color: task.color,
+                                status: null,
+                                taskIndex: taskIndex,
+                                subtaskIndex: null
+                            });
+                        }
+                    }
+                }
+            });
+            
+            // 종료일 기준으로 오름차순 정렬 (급한 순서 - 지난 날짜가 먼저)
+            todayTasks.sort((a, b) => {
+                const dateA = new Date(a.endDate);
+                const dateB = new Date(b.endDate);
+                return dateA - dateB;
+            });
+            
+            // 완료한 할일 수집 (메인 할일별로 그룹화)
+            const completedTasksGrouped = [];
+            tasks.forEach((task, taskIndex) => {
+                // 오늘 날짜가 메인 할일 기간 내에 있는지 확인
+                if (isActiveToday(task)) {
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        const completedSubtasks = [];
+                        task.subtasks.forEach((subtask, subtaskIndex) => {
+                            if (subtask.status === '완료' || subtask.status === '종료') {
+                                completedSubtasks.push({
+                                    name: subtask.name,
+                                    status: subtask.status,
+                                    taskIndex: taskIndex,
+                                    subtaskIndex: subtaskIndex
+                                });
+                            }
+                        });
+                        
+                        // 완료된 하위 할일이 있으면 그룹에 추가
+                        if (completedSubtasks.length > 0) {
+                            completedTasksGrouped.push({
+                                mainTask: task.name,
+                                color: task.color,
+                                completedSubtasks: completedSubtasks,
+                                taskIndex: taskIndex
+                            });
+                        }
+                    } else {
+                        const progress = calculateProgress(task);
+                        if (progress === 100) {
+                            completedTasksGrouped.push({
+                                mainTask: task.name,
+                                color: task.color,
+                                completedSubtasks: [],
+                                taskIndex: taskIndex
+                            });
+                        }
+                    }
+                }
+            });
+            
+            dashboard.innerHTML = `
+                <div class="dashboard-header">
+                    <div class="dashboard-date">${dateStr}</div>
+                    <div class="dashboard-day">${dayStr}</div>
+                </div>
+                
+                <div class="section-title">📋 오늘 진행 중인 할일</div>
+                ${todayTasks.length > 0 ? `
+                    <ul class="task-list">
+                        ${todayTasks.map((item, index) => {
+                            const dday = calculateDday(item.endDate);
+                            return `
+                                <li class="task-list-item ${item.color}">
+                                    <div class="task-list-content">
+                                        <div class="task-list-main">${item.mainTask}</div>
+                                        ${item.subTask ? `<div class="task-list-sub">└ ${item.subTask}</div>` : ''}
+                                    </div>
+                                    <div class="task-list-controls">
+                                        ${item.status ? `
+                                            <select class="status-dropdown-dashboard ${item.status}" data-task-index="${item.taskIndex}" data-subtask-index="${item.subtaskIndex}">
+                                                <option value="진행중" ${item.status === '진행중' ? 'selected' : ''}>진행중</option>
+                                                <option value="완료" ${item.status === '완료' ? 'selected' : ''}>완료</option>
+                                                <option value="보류" ${item.status === '보류' ? 'selected' : ''}>보류</option>
+                                                <option value="종료" ${item.status === '종료' ? 'selected' : ''}>종료</option>
+                                            </select>
+                                        ` : ''}
+                                        <span class="task-list-dday ${dday.class}">${dday.text}</span>
+                                    </div>
+                                </li>
+                            `;
+                        }).join('')}
+                    </ul>
+                ` : '<div class="empty-state"><div class="empty-state-icon">☕</div><div class="empty-state-text">오늘 진행 중인 할일이 없습니다</div></div>'}
+                
+                <div class="section-title">✅ 완료한 할일</div>
+                ${completedTasksGrouped.length > 0 ? `
+                    <ul class="task-list">
+                        ${completedTasksGrouped.map(group => `
+                            <li class="task-list-item ${group.color}">
+                                <div class="task-list-content">
+                                    <div class="task-list-main">${group.mainTask}</div>
+                                    ${group.completedSubtasks.length > 0 ? 
+                                        group.completedSubtasks.map(subtask => `
+                                            <div class="task-list-sub completed-subtask">
+                                                <span>└ ${subtask.name}</span>
+                                                <select class="status-dropdown-dashboard ${subtask.status}" data-task-index="${subtask.taskIndex}" data-subtask-index="${subtask.subtaskIndex}">
+                                                    <option value="진행중" ${subtask.status === '진행중' ? 'selected' : ''}>진행중</option>
+                                                    <option value="완료" ${subtask.status === '완료' ? 'selected' : ''}>완료</option>
+                                                    <option value="보류" ${subtask.status === '보류' ? 'selected' : ''}>보류</option>
+                                                    <option value="종료" ${subtask.status === '종료' ? 'selected' : ''}>종료</option>
+                                                </select>
+                                                <span class="task-list-dday completed">✓</span>
+                                            </div>
+                                        `).join('') 
+                                        : ''}
+                                </div>
+                                ${group.completedSubtasks.length === 0 ? `
+                                    <div class="task-list-controls">
+                                        <span class="task-list-dday completed">✓</span>
+                                    </div>
+                                ` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : '<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">완료한 할일이 없습니다</div></div>'}
+            `;
+            
+            // 상태 드롭다운 이벤트 리스너 추가
+            dashboard.querySelectorAll('.status-dropdown-dashboard').forEach(dropdown => {
+                dropdown.addEventListener('change', (e) => {
+                    const taskIndex = parseInt(e.target.dataset.taskIndex);
+                    const subtaskIndex = parseInt(e.target.dataset.subtaskIndex);
+                    const newStatus = e.target.value;
+                    
+                    if (subtaskIndex !== null && !isNaN(subtaskIndex)) {
+                        tasks[taskIndex].subtasks[subtaskIndex].status = newStatus;
+                    }
+                    
+                    saveTasks();
+                    renderChart();
+                    renderDashboard();
+                    renderAllTasksList();
+                });
+            });
+        }
+
+        // 전체 목록 렌더링
+        function renderAllTasksList() {
+            const listContainer = document.getElementById('allTasksList');
+            
+            if (tasks.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">등록된 할일이 없습니다</div></div>';
+                return;
+            }
+            
+            let html = '<ul class="task-list">';
+            tasks.forEach(task => {
+                const progress = calculateProgress(task);
+                const dday = calculateDday(task.endDate);
+                const isMainCompleted = progress === 100;
+                
+                html += `
+                    <li class="task-list-item ${task.color}">
+                        <div class="task-list-content">
+                            <div class="task-list-main">${task.name} [${progress}%]</div>
+                            ${task.subtasks && task.subtasks.length > 0 ? 
+                                task.subtasks.map(st => {
+                                    const subtaskDday = calculateDday(st.endDate);
+                                    const isSubtaskCompleted = st.status === '완료' || st.status === '종료';
+                                    return `
+                                        <div class="task-list-sub" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 8px 15px; background: #f0f0f0; border-radius: 5px;">
+                                            <span>└ ${st.name} [${st.status}]</span>
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <span style="font-size: 0.85em; color: ${isSubtaskCompleted ? '#999' : '#666'}; ${isSubtaskCompleted ? 'opacity: 0.6;' : ''}">${formatDate(st.startDate)} ~ ${formatDate(st.endDate)}</span>
+                                                ${isSubtaskCompleted 
+                                                    ? '<span class="task-list-dday completed" style="margin: 0;">✓</span>'
+                                                    : `<span class="task-list-dday ${subtaskDday.class}" style="margin: 0;">${subtaskDday.text}</span>`
+                                                }
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('') 
+                                : ''}
+                        </div>
+                        ${isMainCompleted 
+                            ? '<span class="task-list-dday completed">✓ 완료</span>'
+                            : `<span class="task-list-dday ${dday.class}">${dday.text}</span>`
+                        }
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            
+            listContainer.innerHTML = html;
+        }
+
+        // 간트차트 렌더링 함수들
+        function updateParentTaskBar(parentIndex) {
+            const parentTask = tasks[parentIndex];
+            if (!parentTask.subtasks || parentTask.subtasks.length === 0) return;
+            
+            const chartBody = ganttChart.querySelector('.chart-body');
+            if (!chartBody) return;
+            
+            const parentRow = chartBody.querySelector(`.chart-row:not(.subtask-row)[data-task-index="${parentIndex}"]`);
+            if (!parentRow) return;
+            
+            const taskBar = parentRow.querySelector('.task-bar');
+            if (!taskBar) return;
+            
+            const completedCount = parentTask.subtasks.filter(st => st.status === '완료').length;
+            taskBar.textContent = `완료 ${completedCount}/${parentTask.subtasks.length}`;
+        }
+
+        function createStatusDropdown(task) {
+            const dropdown = document.createElement('select');
+            dropdown.className = `status-dropdown ${task.status || '진행중'}`;
+            
+            const statuses = ['진행중', '완료', '보류', '종료'];
+            statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                if (status === task.status) option.selected = true;
+                dropdown.appendChild(option);
+            });
+            return dropdown;
+        }
+
+        function createTaskBar(task, isSubtask, dates, minDate, taskIndex = null) {
+            const startDate = new Date(task.startDate);
+            const endDate = new Date(task.endDate);
+            const startDay = Math.floor((startDate - minDate) / 86400000);
+            const duration = Math.floor((endDate - startDate) / 86400000) + 1;
+            const totalDays = dates.length;
+            
+            const taskBar = document.createElement('div');
+            taskBar.className = `task-bar ${task.color}`;
+            taskBar.style.left = `${(startDay / totalDays) * 100}%`;
+            taskBar.style.width = `${(duration / totalDays) * 100}%`;
+            
+            if (!isSubtask && task.subtasks && task.subtasks.length > 0) {
+                const completedCount = task.subtasks.filter(st => st.status === '완료').length;
+                taskBar.textContent = `완료 ${completedCount}/${task.subtasks.length}`;
+                if (taskIndex !== null) {
+                    taskBar.setAttribute('data-task-id', taskIndex);
+                }
+            } else {
+                taskBar.textContent = `${duration}일`;
+            }
+            
+            if (isSubtask) {
+                taskBar.style.opacity = '0.8';
+                taskBar.style.height = '30px';
+                if (task.status) taskBar.classList.add(`status-${task.status}`);
+            }
+            
+            taskBar.addEventListener('mouseenter', () => {
+                document.getElementById('tooltipTitle').textContent = task.name;
+                document.getElementById('tooltipDates').textContent = `📅 ${task.startDate} ~ ${task.endDate}`;
+                document.getElementById('tooltipDuration').textContent = `⏱️ 기간: ${duration}일`;
+                tooltip.classList.add('show');
+            });
+            taskBar.addEventListener('mousemove', (e) => {
+                tooltip.style.left = `${e.clientX + 15}px`;
+                tooltip.style.top = `${e.clientY + 15}px`;
+            });
+            taskBar.addEventListener('mouseleave', () => tooltip.classList.remove('show'));
+            
+            return taskBar;
+        }
+
+        function createTaskRow(task, isSubtask, parentIndex, subtaskIndex, dates, minDate, taskIndex = null) {
+            const chartRow = document.createElement('div');
+            chartRow.className = isSubtask ? 'chart-row subtask-row' : 'chart-row';
+            if (isSubtask && parentIndex !== null) {
+                chartRow.setAttribute('data-parent', parentIndex);
+                if (subtaskIndex !== null) {
+                    chartRow.setAttribute('data-subtask-index', subtaskIndex);
+                }
+            } else if (!isSubtask && taskIndex !== null) {
+                chartRow.setAttribute('data-task-index', taskIndex);
+            }
+            
+            const taskName = document.createElement('div');
+            taskName.className = isSubtask ? 'task-name subtask' : 'task-name';
+            
+            if (!isSubtask) {
+                const nameSpan = document.createElement('span');
+                if (task.subtasks && task.subtasks.length > 0) {
+                    nameSpan.className = 'has-subtasks';
+                }
+                nameSpan.textContent = task.name;
+                taskName.appendChild(nameSpan);
+                
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'task-buttons';
+                
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'menu-btn';
+                menuBtn.textContent = '⋮';
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = buttonGroup.querySelector('.dropdown-menu');
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        if (menu !== dropdown) menu.classList.remove('show');
+                    });
+                    dropdown.classList.toggle('show');
+                });
+                buttonGroup.appendChild(menuBtn);
+                
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-menu';
+                
+                const addSubtaskItem = document.createElement('button');
+                addSubtaskItem.className = 'dropdown-item add';
+                addSubtaskItem.innerHTML = '➕ 하위 추가';
+                addSubtaskItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('show');
+                    openSubtaskModal(tasks.indexOf(task));
+                });
+                dropdown.appendChild(addSubtaskItem);
+                
+                const editItem = document.createElement('button');
+                editItem.className = 'dropdown-item edit';
+                editItem.innerHTML = '✏️ 편집';
+                editItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('show');
+                    openEditTaskModal(tasks.indexOf(task));
+                });
+                dropdown.appendChild(editItem);
+                
+                const deleteItem = document.createElement('button');
+                deleteItem.className = 'dropdown-item delete';
+                deleteItem.innerHTML = '🗑️ 삭제';
+                deleteItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('show');
+                    deleteTask(tasks.indexOf(task));
+                });
+                dropdown.appendChild(deleteItem);
+                
+                buttonGroup.appendChild(dropdown);
+                taskName.appendChild(buttonGroup);
+            } else {
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = task.name;
+                taskName.appendChild(nameSpan);
+                
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'task-buttons';
+                
+                if (task.status) {
+                    const dropdown = createStatusDropdown(task);
+                    buttonGroup.appendChild(dropdown);
+                    taskName.statusDropdown = dropdown;
+                }
+                
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'menu-btn';
+                menuBtn.textContent = '⋮';
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = buttonGroup.querySelector('.dropdown-menu');
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        if (menu !== dropdown) menu.classList.remove('show');
+                    });
+                    dropdown.classList.toggle('show');
+                });
+                buttonGroup.appendChild(menuBtn);
+                
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-menu';
+                
+                const editItem = document.createElement('button');
+                editItem.className = 'dropdown-item edit';
+                editItem.innerHTML = '✏️ 편집';
+                editItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('show');
+                    openEditSubtaskModal(parentIndex, subtaskIndex);
+                });
+                dropdown.appendChild(editItem);
+                
+                const deleteItem = document.createElement('button');
+                deleteItem.className = 'dropdown-item delete';
+                deleteItem.innerHTML = '🗑️ 삭제';
+                deleteItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('show');
+                    deleteSubtask(parentIndex, subtaskIndex);
+                });
+                dropdown.appendChild(deleteItem);
+                
+                buttonGroup.appendChild(dropdown);
+                taskName.appendChild(buttonGroup);
+            }
+            
+            chartRow.appendChild(taskName);
+            
+            const taskTimeline = document.createElement('div');
+            taskTimeline.className = 'task-timeline';
+            dates.forEach(() => {
+                const column = document.createElement('div');
+                column.className = 'timeline-column';
+                taskTimeline.appendChild(column);
+            });
+            
+            const taskBar = createTaskBar(task, isSubtask, dates, minDate, !isSubtask ? taskIndex : null);
+            taskTimeline.appendChild(taskBar);
+            chartRow.appendChild(taskTimeline);
+            
+            if (isSubtask && taskName.statusDropdown) {
+                const dropdown = taskName.statusDropdown;
+                dropdown.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    task.status = e.target.value;
+                    dropdown.className = `status-dropdown ${task.status}`;
+                    
+                    const originalText = taskBar.textContent;
+                    taskBar.className = `task-bar ${task.color}`;
+                    taskBar.style.opacity = '0.8';
+                    taskBar.style.height = '30px';
+                    taskBar.classList.add(`status-${task.status}`);
+                    taskBar.textContent = originalText;
+                    
+                    if (parentIndex !== null) {
+                        updateParentTaskBar(parentIndex);
+                        applyCompletedFilter();
+                    }
+                    
+                    saveTasks();
+                    renderDashboard();
+                    renderAllTasksList();
+                });
+            }
+            
+            return chartRow;
+        }
+
+        function applyCompletedFilter() {
+            if (!hideCompleted) {
+                // 숨기기가 비활성화된 경우 모두 표시
+                document.querySelectorAll('.chart-row').forEach(row => {
+                    row.classList.remove('hidden');
+                });
+                return;
+            }
+            
+            // 각 메인 할일의 완료 여부 확인
+            tasks.forEach((task, taskIndex) => {
+                const progress = calculateProgress(task);
+                const isCompleted = progress === 100;
+                
+                // 메인 할일 row 찾기
+                const mainRow = document.querySelector(`.chart-row[data-task-index="${taskIndex}"]`);
+                
+                if (isCompleted) {
+                    // 케이스 1: 메인 할일이 완료된 경우 (진척률 100%)
+                    // → 메인 할일과 모든 하위 할일을 전부 숨김
+                    if (mainRow) {
+                        mainRow.classList.add('hidden');
+                    }
+                    
+                    const subtaskRows = document.querySelectorAll(`.subtask-row[data-parent="${taskIndex}"]`);
+                    subtaskRows.forEach(row => {
+                        row.classList.add('hidden');
+                    });
+                } else {
+                    // 케이스 2: 메인 할일이 완료 안된 경우 (진척률 < 100%)
+                    // → 메인 할일은 표시, 완료된 하위 할일만 숨김
+                    if (mainRow) {
+                        mainRow.classList.remove('hidden');
+                    }
+                    
+                    const subtaskRows = document.querySelectorAll(`.subtask-row[data-parent="${taskIndex}"]`);
+                    subtaskRows.forEach(row => {
+                        const subtaskIndex = parseInt(row.getAttribute('data-subtask-index'));
+                        if (!isNaN(subtaskIndex) && task.subtasks && task.subtasks[subtaskIndex]) {
+                            const subtask = task.subtasks[subtaskIndex];
+                            // 하위 할일의 상태가 '완료' 또는 '종료'인 경우만 숨김
+                            if (subtask.status === '완료' || subtask.status === '종료') {
+                                row.classList.add('hidden');
+                            } else {
+                                row.classList.remove('hidden');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderChart() {
+            ganttChart.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                ganttChart.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">등록된 할일이 없습니다</div></div>';
+                return;
+            }
+            
+            const allDates = tasks.flatMap(task => [new Date(task.startDate), new Date(task.endDate)]);
+            const minDate = new Date(Math.min(...allDates));
+            const maxDate = new Date(Math.max(...allDates));
+            const dates = [];
+            for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+                dates.push(new Date(d));
+            }
+
+            const chartHeader = document.createElement('div');
+            chartHeader.className = 'chart-header';
+            chartHeader.innerHTML = '<div class="header-left"></div>';
+            const headerRight = document.createElement('div');
+            headerRight.className = 'header-right';
+            dates.forEach(date => {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'timeline-date';
+                dateDiv.textContent = `${date.getMonth() + 1}/${date.getDate()}`;
+                headerRight.appendChild(dateDiv);
+            });
+            chartHeader.appendChild(headerRight);
+            ganttChart.appendChild(chartHeader);
+
+            const chartBody = document.createElement('div');
+            chartBody.className = 'chart-body';
+
+            tasks.forEach((task, taskIndex) => {
+                // 진척률 100%이고 종료기한이 지난 메인 할일은 간트 차트에서 숨김
+                const progress = calculateProgress(task);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const endDate = new Date(task.endDate);
+                endDate.setHours(0, 0, 0, 0);
+                
+                // 진척률이 100%이고 종료일이 오늘보다 이전이면 렌더링하지 않음
+                if (progress === 100 && endDate < today) {
+                    return;
+                }
+                
+                const mainRow = createTaskRow(task, false, null, null, dates, minDate, taskIndex);
+                chartBody.appendChild(mainRow);
+                
+                if (task.subtasks && task.subtasks.length > 0) {
+                    task.subtasks.forEach((subtask, subtaskIndex) => {
+                        chartBody.appendChild(createTaskRow(subtask, true, taskIndex, subtaskIndex, dates, minDate));
+                    });
+                    
+                    const taskNameElement = mainRow.querySelector('.task-name');
+                    const toggleBtn = taskNameElement.querySelector('.has-subtasks');
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', (e) => {
+                            if (e.target.tagName === 'BUTTON') return;
+                            const isCollapsed = taskNameElement.classList.toggle('collapsed');
+                            const subtaskRows = chartBody.querySelectorAll(`.subtask-row[data-parent="${taskIndex}"]`);
+                            subtaskRows.forEach(row => row.classList.toggle('collapsed', isCollapsed));
+                        });
+                    }
+                }
+            });
+
+            ganttChart.appendChild(chartBody);
+
+            // 오늘 날짜 라인 표시
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (today >= minDate && today <= maxDate) {
+                // dates 배열에서 오늘과 일치하는 인덱스 찾기
+                let todayIndex = -1;
+                dates.forEach((date, index) => {
+                    const dateStr = date.toDateString();
+                    const todayStr = today.toDateString();
+                    if (dateStr === todayStr) {
+                        todayIndex = index;
+                    }
+                });
+                
+                if (todayIndex !== -1) {
+                    // 정확한 위치 계산: 해당 날짜 컬럼의 중앙
+                    const todayPosition = ((todayIndex + 0.5) / dates.length) * 100;
+                    
+                    chartBody.querySelectorAll('.chart-row').forEach((row, index) => {
+                        const timeline = row.querySelector('.task-timeline');
+                        const currentDateLine = document.createElement('div');
+                        currentDateLine.className = 'current-date-line';
+                        currentDateLine.style.left = `${todayPosition}%`;
+                        if (index !== 0) currentDateLine.classList.add('no-label');
+                        timeline.appendChild(currentDateLine);
+                    });
+                }
+            }
+
+            applyCompletedFilter();
+        }
+
+        // 모달 관련 함수들
+        function openSubtaskModal(taskIndex) {
+            document.getElementById('modalTitle').textContent = '하위 할일 추가';
+            statusGroup.style.display = 'block';
+            isAddingSubtask = true;
+            isEditing = false;
+            parentTaskIndex = taskIndex;
+            editingTaskIndex = null;
+            editingSubtaskIndex = null;
+            taskForm.reset();
+            
+            const parentColor = tasks[taskIndex].color;
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-color') === parentColor) {
+                    opt.classList.add('selected');
+                }
+            });
+            selectedColor = parentColor;
+            
+            taskModal.classList.add('show');
+        }
+
+        function openEditTaskModal(taskIndex) {
+            const task = tasks[taskIndex];
+            document.getElementById('modalTitle').textContent = '할일 편집';
+            statusGroup.style.display = 'none';
+            isAddingSubtask = false;
+            isEditing = true;
+            editingTaskIndex = taskIndex;
+            editingSubtaskIndex = null;
+            parentTaskIndex = null;
+            
+            document.getElementById('taskNameInput').value = task.name;
+            document.getElementById('taskStartDate').value = task.startDate;
+            document.getElementById('taskEndDate').value = task.endDate;
+            
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-color') === task.color) {
+                    opt.classList.add('selected');
+                }
+            });
+            selectedColor = task.color;
+            
+            taskModal.classList.add('show');
+        }
+
+        function openEditSubtaskModal(taskIndex, subtaskIndex) {
+            const subtask = tasks[taskIndex].subtasks[subtaskIndex];
+            document.getElementById('modalTitle').textContent = '하위 할일 편집';
+            statusGroup.style.display = 'block';
+            isAddingSubtask = true;
+            isEditing = true;
+            parentTaskIndex = taskIndex;
+            editingTaskIndex = taskIndex;
+            editingSubtaskIndex = subtaskIndex;
+            
+            document.getElementById('taskNameInput').value = subtask.name;
+            document.getElementById('taskStartDate').value = subtask.startDate;
+            document.getElementById('taskEndDate').value = subtask.endDate;
+            document.getElementById('taskStatus').value = subtask.status || '진행중';
+            
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-color') === subtask.color) {
+                    opt.classList.add('selected');
+                }
+            });
+            selectedColor = subtask.color;
+            
+            taskModal.classList.add('show');
+        }
+
+        function deleteTask(taskIndex) {
+            if (confirm('이 할일을 삭제하시겠습니까? (하위 할일도 함께 삭제됩니다)')) {
+                tasks.splice(taskIndex, 1);
+                saveTasks();
+                renderChart();
+                renderDashboard();
+                renderAllTasksList();
+            }
+        }
+
+        function deleteSubtask(taskIndex, subtaskIndex) {
+            if (confirm('이 하위 할일을 삭제하시겠습니까?')) {
+                tasks[taskIndex].subtasks.splice(subtaskIndex, 1);
+                saveTasks();
+                renderChart();
+                renderDashboard();
+                renderAllTasksList();
+            }
+        }
+
+        // 이벤트 리스너들
+        colorSelector.addEventListener('click', (e) => {
+            if (e.target.classList.contains('color-option')) {
+                document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selectedColor = e.target.getAttribute('data-color');
+            }
+        });
+
+        document.getElementById('addMainTaskBtn').addEventListener('click', () => {
+            document.getElementById('modalTitle').textContent = '할일 추가';
+            statusGroup.style.display = 'none';
+            isAddingSubtask = false;
+            isEditing = false;
+            parentTaskIndex = null;
+            editingTaskIndex = null;
+            editingSubtaskIndex = null;
+            taskForm.reset();
+            document.querySelector('.color-option').classList.add('selected');
+            selectedColor = 'color-1';
+            taskModal.classList.add('show');
+        });
+
+        document.getElementById('addMainTaskBtn2').addEventListener('click', () => {
+            document.getElementById('addMainTaskBtn').click();
+        });
+
+        toggleCompletedBtn.addEventListener('click', () => {
+            hideCompleted = !hideCompleted;
+            if (hideCompleted) {
+                toggleCompletedBtn.textContent = '✓ 완료된 할일 보이기';
+                toggleCompletedBtn.classList.remove('btn-secondary');
+                toggleCompletedBtn.classList.add('btn-primary');
+            } else {
+                toggleCompletedBtn.textContent = '✓ 완료된 할일 숨기기';
+                toggleCompletedBtn.classList.remove('btn-primary');
+                toggleCompletedBtn.classList.add('btn-secondary');
+            }
+            applyCompletedFilter();
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            taskModal.classList.remove('show');
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            taskModal.classList.remove('show');
+        });
+
+        taskModal.addEventListener('click', (e) => {
+            if (e.target === taskModal) {
+                taskModal.classList.remove('show');
+            }
+        });
+
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('taskNameInput').value.trim();
+            const startDate = document.getElementById('taskStartDate').value;
+            const endDate = document.getElementById('taskEndDate').value;
+            const status = document.getElementById('taskStatus').value;
+            
+            if (!name || !startDate || !endDate) {
+                alert('모든 필수 항목을 입력해주세요.');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('종료일은 시작일보다 이후여야 합니다.');
+                return;
+            }
+            
+            const taskData = {
+                name,
+                startDate,
+                endDate,
+                color: selectedColor
+            };
+            
+            if (isEditing) {
+                if (editingSubtaskIndex !== null) {
+                    tasks[editingTaskIndex].subtasks[editingSubtaskIndex] = {
+                        ...taskData,
+                        status
+                    };
+                } else {
+                    const existingSubtasks = tasks[editingTaskIndex].subtasks;
+                    tasks[editingTaskIndex] = {
+                        ...taskData,
+                        subtasks: existingSubtasks
+                    };
+                }
+            } else {
+                if (isAddingSubtask) {
+                    if (!tasks[parentTaskIndex].subtasks) {
+                        tasks[parentTaskIndex].subtasks = [];
+                    }
+                    tasks[parentTaskIndex].subtasks.push({
+                        ...taskData,
+                        status
+                    });
+                } else {
+                    tasks.push({
+                        ...taskData,
+                        subtasks: []
+                    });
+                }
+            }
+            
+            taskModal.classList.remove('show');
+            taskForm.reset();
+            saveTasks();
+            renderChart();
+            renderDashboard();
+            renderAllTasksList();
+        });
+
+        // 데이터 관리
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            const dataStr = JSON.stringify(tasks, null, 2);
+            const defaultFileName = `gantt-${new Date().toISOString().slice(0, 10)}.json`;
+            
+            // File System Access API 지원 확인
+            if ('showSaveFilePicker' in window) {
+                try {
+                    // 파일 저장 대화상자 열기 (경로 선택 가능)
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: defaultFileName,
+                        types: [{
+                            description: 'JSON 파일',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+                    
+                    // 파일 쓰기
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(dataStr);
+                    await writable.close();
+                    
+                    alert('데이터를 성공적으로 저장했습니다.');
+                } catch (error) {
+                    // 사용자가 취소한 경우
+                    if (error.name !== 'AbortError') {
+                        console.error('저장 실패:', error);
+                        alert('파일 저장에 실패했습니다.');
+                    }
+                }
+            } else {
+                // File System Access API를 지원하지 않는 브라우저 (구형 브라우저)
+                // 기존 방식으로 다운로드
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = defaultFileName;
+                link.click();
+                URL.revokeObjectURL(url);
+                alert(`데이터를 다운로드 폴더에 저장했습니다.\n\n최신 브라우저(Chrome, Edge 등)를 사용하시면 저장 위치를 직접 선택할 수 있습니다.`);
+            }
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => {
+            document.getElementById('importFile').click();
+        });
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (!Array.isArray(imported)) throw new Error('Invalid format');
+                    tasks = imported;
+                    saveTasks();
+                    renderChart();
+                    renderDashboard();
+                    renderAllTasksList();
+                    alert('데이터를 불러왔습니다.');
+                } catch (error) {
+                    alert('파일을 불러오는데 실패했습니다.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+                tasks = JSON.parse(JSON.stringify(defaultTasks));
+                saveTasks();
+                renderChart();
+                renderDashboard();
+                renderAllTasksList();
+                alert('초기화되었습니다.');
+            }
+        });
+
+        // 탭 전환
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(`${tab}-tab`).classList.add('active');
+                
+                if (tab === 'dashboard') {
+                    renderDashboard();
+                } else if (tab === 'gantt') {
+                    renderChart();
+                } else if (tab === 'list') {
+                    renderAllTasksList();
+                }
+            });
+        });
+
+        // 외부 클릭 시 드롭다운 메뉴 닫기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.task-buttons')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        // 초기 렌더링
+        renderDashboard();
+    </script>
+</body>
+</html>
